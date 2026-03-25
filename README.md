@@ -110,7 +110,36 @@ alarm_blink.sh stop                      # stop all
 alarm_blink.sh toggle --name vitamins    # start if off, stop if running
 ```
 
-## Integration Points
+## Key Layout & Bindings (Hyprland / julia)
+
+Physical layout with key functions and XF86 keysyms:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  [knob L]        [knob M]          [knob R]          │
+│  press=gammastep  (unused)          press=cycle-sink  │
+│  rotate=temp↑↓                      rotate=vol↑↓     │
+├──────────────┬──────────────┬──────────────┬─────────┤
+│  0           │  1           │  2           │  3      │
+│  XF86Tools   │  XF86Launch5 │  XF86TouchpadOn│XF86Search│
+│  play/pause  │  pause all   │  kill chrome │cycle sink│
+│              │  (not vlc)   │              │         │
+├──────────────┼──────────────┼──────────────┼─────────┤
+│  4           │  5           │  6           │  7      │
+│  XF86Launch9 │  (unused)    │  (unused)    │(unused) │
+│  workspace 1 │              │              │         │
+├──────────────┼──────────────┼──────────────┼─────────┤
+│  8           │  9           │  10          │  11     │
+│  XF86Launch8 │  (unused)    │  (unused)    │(unused) │
+│  gammastep   │              │              │         │
+│  toggle      │              │              │         │
+├──────────────┼──────────────┼──────────────┼─────────┤
+│  12          │  13          │  14          │  15     │
+│  XF86Calculator│(unused)    │  XF86TouchpadOff│code:202│
+│  JupyterLab  │              │  spanish alarm│vitamins │
+│              │              │  toggle🟠    │ toggle🔵│
+└──────────────┴──────────────┴──────────────┴─────────┘
+```
 
 ### Cron Jobs (`/etc/cron.d/jmorris`)
 
@@ -124,25 +153,24 @@ Scheduled alarms trigger LED blinks as visual reminders:
 0 12 * * * jmorris /mnt/bebop_jmorris/code/megalodon_macropad/alarm_blink.sh start --name vitamins --leds 15 --hue 170
 ```
 
-### i3 Keybindings
-
-Physical macropad keys toggle alarms on/off (first press starts blink, second press stops it):
+### Hyprland Keybindings (`~/.config/hypr/hyprland.conf`)
 
 ```
-# F23 / XF86TouchpadOff (row 3, col 2, LED 14) - toggle spanish alarm
-bindsym XF86TouchpadOff exec --no-startup-id /mnt/bebop_jmorris/code/megalodon_macropad/alarm_blink.sh toggle --name spanish --leds 14 --hue 21
-
-# F24 / bindcode 202 (row 3, col 3, LED 15) - toggle vitamins alarm
-bindcode 202 exec --no-startup-id /mnt/bebop_jmorris/code/megalodon_macropad/alarm_blink.sh toggle --name vitamins --leds 15 --hue 170
+XF86Tools          → playerctl play-pause
+XF86Launch5        → playerctl pause all players (except vlc)
+XF86TouchpadOn     → kill_chrome.sh
+XF86Search         → cycle-sink.sh (cycle audio output)
+XF86Launch9        → switch to workspace 1
+XF86Launch8        → gammastep toggle (screen color temperature)
+XF86Calculator     → jlab (JupyterLab)
+XF86TouchpadOff    → toggle spanish alarm (LED 14, orange)
+code:202           → toggle vitamins alarm (LED 15, blue)
+XF86MonBrightnessUp   → gammastep decrease (warmer)
+XF86MonBrightnessDown → gammastep increase (cooler)
+XF86AudioRaiseVolume  → volume +5%
+XF86AudioLowerVolume  → volume -5%
+XF86AudioMute         → mute toggle
 ```
-
-### Other Macropad Bindings (in i3 config)
-
-- **Top-left knob press (F17/XF86Launch8)**: Toggle redshift
-- **XF86Search**: Cycle audio output (headset/speakers)
-- **Top-right knob rotate**: Adjust redshift temperature
-- **XF86Calculator**: Launch JupyterLab
-- **XF86Launch9**: Switch to workspace 1
 
 ## Architecture
 
@@ -155,11 +183,3 @@ The system uses a slot-based daemon architecture:
 5. When a slot file is removed (via `stop`), that alarm stops blinking
 6. When all slots are gone, the daemon restores label colors (or the previous effect) and exits
 
-## Path Migration
-
-These scripts were moved from `~/dotfiles/scripts/` to `/mnt/bebop_jmorris/code/megalodon_macropad/`. The following files reference the scripts and need their paths updated:
-
-- `/etc/cron.d/jmorris` - cron alarm triggers
-- `~/dotfiles/ansible/roles/linux/files/etc/cron.d/jmorris.julia` - Ansible-managed cron template
-- `~/dotfiles/ansible/roles/linux_i3/files/i3/config.julia` - i3 keybindings
-- `~/.config/i3/config` (live i3 config, if different from Ansible-managed version)
