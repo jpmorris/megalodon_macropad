@@ -498,7 +498,11 @@ def cmd_label(args):
                     print(f"Unrecognised color spec '{color_str}' for LED {idx}")
                     sys.exit(1)
 
-    save_label_colors(colors)
+    # Only save if we have something to save: either the file loaded OK, or
+    # the caller explicitly specified new colors via --preset or --colors.
+    # This prevents a load failure (e.g. NFS not mounted) from wiping the file.
+    if existing is not None or args.preset or args.colors:
+        save_label_colors(colors)
     h = open_device()
     set_mode(h, VIALRGB_EFFECT_DIRECT)
     time.sleep(0.05)
